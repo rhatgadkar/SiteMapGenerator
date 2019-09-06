@@ -72,36 +72,6 @@ class TestGenerateSiteMap(unittest.TestCase):
             "example.com",
         )
 
-        # verify with trailing "/"
-        self.assertEqual(
-            strip_http_www("http://www.example.com/"),
-            "example.com",
-        )
-
-        # verify with multiple trailing "/"
-        self.assertEqual(
-            strip_http_www("http://www.example.com///"),
-            "example.com",
-        )
-
-        # verify with trailing "/" and "https://"
-        self.assertEqual(strip_http_www("https://example.com/"), "example.com")
-
-        # verify with trailing '/' and "http://"
-        self.assertEqual(strip_http_www("http://example.com/"), "example.com")
-
-        # verify with trailing "/" and "https://www."
-        self.assertEqual(
-            strip_http_www("https://www.example.com/"),
-            "example.com",
-        )
-
-        # verify with trailing "/" and "http://www."
-        self.assertEqual(
-            strip_http_www("http://www.example.com/"),
-            "example.com",
-        )
-
     def test_get_domain_links(self):
         """Verify `get_domain_links()` correctly outputs only domain links."""
         # verify domain link with leading "https:"
@@ -139,11 +109,11 @@ class TestGenerateSiteMap(unittest.TestCase):
         # test non-image link
         self.assertFalse(is_image_link("https://example.com"))
 
-        # test ".ico" link
-        self.assertTrue(is_image_link("https://example.com/img1.ico/"))
+        # test invalid ".ico" link
+        self.assertFalse(is_image_link("https://example.com/img1.ico/"))
 
-        # test ".png" link
-        self.assertTrue(is_image_link("https://example.com/img1.PNG/"))
+        # test invalid ".png" link
+        self.assertFalse(is_image_link("https://example.com/img1.PNG/"))
 
         # test ".jpg" link
         self.assertTrue(is_image_link("https://example.com/img1.jpg"))

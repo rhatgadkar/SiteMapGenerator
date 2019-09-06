@@ -27,8 +27,7 @@ def get_all_links_from_html(html: str) -> List[str]:
 
 
 def strip_http_www(link: str) -> str:
-    """Strip leading "http" and "www" from `link`.  Also strip trailing "/"."""
-    link = link.strip("/")
+    """Strip leading "http" and "www" from `link`."""
     if link.startswith("https://"):
         link = link.lstrip("https://")
     elif link.startswith("http://"):
@@ -45,14 +44,15 @@ def get_domain_links(links: List[str], domain_url: str) -> List[str]:
     """
     return [
         link for link in links
-        if strip_http_www(link).startswith(strip_http_www(domain_url)) and
-        not is_image_link(link)
+        if strip_http_www(link).startswith(
+            strip_http_www(domain_url).strip("/")
+        ) and not is_image_link(link)
     ]
 
 
 def is_image_link(link: str) -> bool:
     """Return `True` if `link` is a link to an image."""
-    return strip_http_www(link)[-4:].lower() in IMAGE_EXTS
+    return link[-4:].lower() in IMAGE_EXTS
 
 
 def get_image_links(links: List[str]) -> List[str]:
@@ -126,13 +126,13 @@ async def build_site_map(
         "links": non_image_links,
         "images": image_links
     }]
-    processed_sites.add(starting_url)
+    processed_sites.add(starting_url.strip("/"))
     if not domain_links:
         return site_map
     domain_link_coros = [
         build_site_map(domain_link, max_depth - 1, processed_sites)
         for domain_link in domain_links
-        if domain_link not in processed_sites
+        if domain_link.strip("/") not in processed_sites
     ]
     for out in await asyncio.gather(*domain_link_coros):
         if out:
