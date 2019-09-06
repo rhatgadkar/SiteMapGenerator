@@ -1,7 +1,7 @@
 from aiohttp import ClientSession
 import asyncio
 import re
-from typing import List
+from typing import Dict, List, Set, Union
 
 
 HREF_RE = (
@@ -17,46 +17,154 @@ async def fetch_html(session: ClientSession, url: str) -> str:
         return await response.text()
 
 
-def get_urls_from_html(html: str) -> List[str]:
+def get_all_links_from_html(html: str) -> List[str]:
     """Get a list of all links in `html`."""
     href_matches = HREF_PROG.findall(html)
     return [href_match[0] for href_match in href_matches]
 
 
-def is_image_url(url: str) -> bool:
-    """Return `True` if `url` is the URL to an image."""
-    return (
-        url.endswith(".ico") or url.endswith(".png") or url.endswith(".jpg") or
-        url.endswith(".gif")
-    )
+def strip_http_www(link: str) -> str:
+    """Strip leading 'http' and 'www' from `link`.  Also strip trailing '/'."""
+    link = link.strip("/")
+    if link.startswith("https://www."):
+        return link.lstrip("https://www.")
+    if link.startswith("http://www."):
+        return link.lstrip("http://www.")
+    if link.startswith("https://"):
+        return link.lstrip("https://")
+    if link.startswith("http://"):
+        return link.lstrip("http://")
+    return link
 
 
-def get_domain_urls(urls: List[str], domain_url: str) -> List[str]:
+def get_domain_links(links: List[str], domain_url: str) -> List[str]:
     """
-    Get the subset of URLs from `urls` that begin with `domain_url` and are not
-    images.
+    Get the subset of links from `links` that begin with `domain_url` and are
+    not images.
     """
     return [
-        url for url in urls
-        if url.startswith(domain_url) and not is_image_url(url)
+        link for link in links
+        if strip_http_www(link).startswith(strip_http_www(domain_url)) and
+        not is_image_link(link)
     ]
 
 
-def get_image_urls(urls: List[str]) -> List[str]:
-    """Get the subset of URLs from `urls` that are links to images."""
-    return [url for url in urls if is_image_url(url)]
+def is_image_link(link: str) -> bool:
+    """Return `True` if `link` is a link to an image."""
+    return (
+        link.endswith(".ico") or
+        link.endswith(".png") or
+        link.endswith(".jpg") or
+        link.endswith(".gif")
+    )
 
 
-async def build_site_map(starting_url: str, max_depth: int = 10):
-    json_site_map = {}
+def get_image_links(links: List[str]) -> List[str]:
+    """Get the subset of links from `links` that are links to images."""
+    return [link for link in links if is_image_link(link)]
+
+
+def get_non_image_links(links: List[str]) -> List[str]:
+    """Get the subset of links from `links` that are not links to images."""
+    return [link for link in links if not is_image_link(link)]
+
+
+async def build_site_map(
+    starting_url: str,
+    max_depth: int = 10,
+    processed_sites: Set[str] = set(),
+) -> List[Dict[str, Union[str, List[str]]]]:
+    """
+    Build a list of site maps beginning from `starting_url` and ending at a
+    depth specified by `max_depth`.  Only domain URL site maps are generated.
+    Site maps contain information about the page's URL, the page's links, and
+    the page's images.
+
+    Here is an example site map:
+    [
+        {
+            "page_url": " https://www.mozilla.org/en-US/ ",
+            "links": [
+                "https://www.mozilla.org/en-US/about/",
+                "https://play.google.com/store/",
+            ]
+            "images": ["https://www.mozilla.org/media/contentcards.png"]
+        },
+        {
+            "page_url": " https://www.mozilla.org/en-US/developer/ ",
+            "links": [
+                "https://www.mozilla.org/en-US/about/",
+                "https://play.google.com/store/",
+            ]
+            "images": ["https://www.mozilla.org/media/contentcards.png"]
+        },
+        ...
+    ]
+
+    Arguments:
+    starting_url:
+        The current domain URL to build the site map from.
+    max_depth:
+        The deepest depth of the site map.
+    processed_sites:
+        URLs whose site maps have already been generated.  Storing these sites
+        helps to ensure that duplicate site maps do not get generated.
+
+    Return:
+        A list of all domain URL site maps.
+    """
+    if not max_depth:
+        return []
+    if not starting_url:
+        raise Exception("`starting_url` was not specified.")
     async with ClientSession() as session:
         html = await fetch_html(session, starting_url)
-    urls = get_urls_from_html(html)
-    domain_urls = get_domain_urls(urls, starting_url)
-    image_urls = get_image_urls(urls)
-    return json_site_map
+    links = get_all_links_from_html(html)
+    domain_links = get_domain_links(links, starting_url)
+    image_links = get_image_links(links)
+    non_image_links = get_non_image_links(links)
+    site_map = [{
+        "page_url": starting_url,
+        "links": non_image_links,
+        "images": image_links
+    }]
+    processed_sites.add(starting_url)
+    if not domain_links:
+        return site_map
+    domain_link_coros = [
+        build_site_map(domain_link, max_depth - 1, processed_sites)
+        for domain_link in domain_links
+        if domain_link not in processed_sites
+    ]
+    for out in await asyncio.gather(*domain_link_coros):
+        if out:
+            site_map.extend(out)
+    return site_map
 
 
-loop = asyncio.get_event_loop()
-domain = "https://www.mozilla.org"
-loop.run_until_complete(build_site_map(domain))
+async def main(domain: str, max_depth: int) -> None:
+    site_map = await build_site_map(domain, max_depth)
+    print(site_map)
+
+
+if __name__ == "__main__":
+    domain = ""
+    while not domain:
+        domain = input("Enter domain URL: ")
+        if (
+            not domain.startswith("http://") and
+            not domain.startswith("https://")
+        ):
+            print("Domain URL must begin with either 'http://' or 'https://'.")
+            domain = ""
+    max_depth = -1
+    while max_depth < 0:
+        try:
+            max_depth = int(input("Enter max depth: "))
+            if max_depth < 0:
+                raise ValueError
+        except ValueError:
+            print("Max depth must be a non-negative integer.")
+            max_depth = -1
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main(domain, max_depth))
