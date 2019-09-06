@@ -141,10 +141,13 @@ async def build_site_map(
 
 
 async def main(domain: str, max_depth: int) -> None:
-    """Write the generated site map into file site_map.json."""
-    site_map = await build_site_map(domain, max_depth)
+    """Write the generated site map into site_map.json."""
+    top_level_site_map = await build_site_map(domain, max_depth)
+    page_urls = [site_map["page_url"] for site_map in top_level_site_map]
+    if len(page_urls) != len(set(page_urls)):
+        print("The generated output contains some duplicate site maps.")
     with open("site_map.json", "w") as f:
-        json.dump(site_map, f, indent=4)
+        json.dump(top_level_site_map, f, indent=4)
 
 
 if __name__ == "__main__":
