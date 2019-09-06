@@ -42,11 +42,11 @@ def get_domain_links(links: List[str], domain_url: str) -> List[str]:
     Get the subset of links from `links` that begin with `domain_url` and are
     not images.
     """
+    stripped_domain = strip_http_www(domain_url).strip("/")
     return [
         link for link in links
-        if strip_http_www(link).startswith(
-            strip_http_www(domain_url).strip("/")
-        ) and not is_image_link(link)
+        if strip_http_www(link).startswith(stripped_domain) and
+        not is_image_link(link)
     ]
 
 
