@@ -61,16 +61,28 @@ class TestGenerateSiteMap(unittest.TestCase):
         self.assertEqual(strip_http_www("http://example.com"), "example.com")
 
         # verify with leading "https://www."
-        self.assertEqual(strip_http_www("https://www.example.com"), "example.com")
+        self.assertEqual(
+            strip_http_www("https://www.example.com"),
+            "example.com",
+        )
 
         # verify with leading "http://www."
-        self.assertEqual(strip_http_www("http://www.example.com"), "example.com")
+        self.assertEqual(
+            strip_http_www("http://www.example.com"),
+            "example.com",
+        )
 
         # verify with trailing "/"
-        self.assertEqual(strip_http_www("http://www.example.com/"), "example.com")
+        self.assertEqual(
+            strip_http_www("http://www.example.com/"),
+            "example.com",
+        )
 
         # verify with multiple trailing "/"
-        self.assertEqual(strip_http_www("http://www.example.com///"), "example.com")
+        self.assertEqual(
+            strip_http_www("http://www.example.com///"),
+            "example.com",
+        )
 
         # verify with trailing "/" and "https://"
         self.assertEqual(strip_http_www("https://example.com/"), "example.com")
@@ -79,10 +91,16 @@ class TestGenerateSiteMap(unittest.TestCase):
         self.assertEqual(strip_http_www("http://example.com/"), "example.com")
 
         # verify with trailing "/" and "https://www."
-        self.assertEqual(strip_http_www("https://www.example.com/"), "example.com")
+        self.assertEqual(
+            strip_http_www("https://www.example.com/"),
+            "example.com",
+        )
 
         # verify with trailing "/" and "http://www."
-        self.assertEqual(strip_http_www("http://www.example.com/"), "example.com")
+        self.assertEqual(
+            strip_http_www("http://www.example.com/"),
+            "example.com",
+        )
 
     def test_get_domain_links(self):
         """Verify `get_domain_links()` correctly outputs only domain links."""
@@ -151,6 +169,7 @@ class TestGenerateSiteMap(unittest.TestCase):
                 "http://example.com",
             },
         )
+
 
 if __name__ == "__main__":
     unittest.main()
