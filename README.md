@@ -7,6 +7,7 @@ The result is outputted into a `site_map.json` file.
 Each site map contains information about the page's URL, the non-image links of
 the page, and the image links of the page.
 Here is an example site map for an non-existing "example.org" domain:
+```
     [
         {
             "page_url": "https://www.example.org/en-US/",
@@ -26,6 +27,7 @@ Here is an example site map for an non-existing "example.org" domain:
         },
         ...
     ]
+```
 
 How to run this program
 -----------------------
