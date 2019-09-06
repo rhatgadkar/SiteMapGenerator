@@ -140,7 +140,7 @@ async def build_site_map(
 
 async def main(domain: str, max_depth: int) -> None:
     site_map = await build_site_map(domain, max_depth)
-    with open("data.json", "w") as f:
+    with open("site_map.json", "w") as f:
         json.dump(site_map, f, indent=4)
 
 
