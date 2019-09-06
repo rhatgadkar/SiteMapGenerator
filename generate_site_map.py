@@ -1,4 +1,4 @@
-from aiohttp import ClientSession
+from aiohttp import ClientSession, client_exceptions
 import asyncio
 import json
 import re
@@ -111,10 +111,12 @@ async def build_site_map(
     """
     if not max_depth:
         return []
-    if not starting_url:
-        raise Exception("`starting_url` was not specified.")
     async with ClientSession() as session:
-        html = await fetch_html(session, starting_url)
+        try:
+            html = await fetch_html(session, starting_url)
+        except client_exceptions.ClientConnectionError:
+            print(f"Cannot process URL: \"{starting_url}\"")
+            return []
     links = get_all_links_from_html(html)
     domain_links = get_domain_links(links, starting_url)
     image_links = get_image_links(links)
