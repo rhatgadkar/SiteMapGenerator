@@ -1,5 +1,6 @@
 from aiohttp import ClientSession
 import asyncio
+import json
 import re
 from typing import Dict, List, Set, Union
 
@@ -18,9 +19,10 @@ async def fetch_html(session: ClientSession, url: str) -> str:
 
 
 def get_all_links_from_html(html: str) -> List[str]:
-    """Get a list of all links in `html`."""
+    """Get a list of all unique links in `html`."""
     href_matches = HREF_PROG.findall(html)
-    return [href_match[0] for href_match in href_matches]
+    links = set([href_match[0] for href_match in href_matches])
+    return list(links)
 
 
 def strip_http_www(link: str) -> str:
@@ -144,7 +146,8 @@ async def build_site_map(
 
 async def main(domain: str, max_depth: int) -> None:
     site_map = await build_site_map(domain, max_depth)
-    print(site_map)
+    with open("data.json", "w") as f:
+        json.dump(site_map, f, indent=4)
 
 
 if __name__ == "__main__":
