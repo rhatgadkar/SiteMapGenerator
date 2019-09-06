@@ -10,7 +10,7 @@ HREF_RE = (
     r"(?P<url>https?\:\/\/(www\.)?(\S+\.)+[a-z]{2,}(\/[^\s\'\"]+)*\/?)\""
 )
 HREF_PROG = re.compile(HREF_RE)
-IMAGE_EXTS = [".ico", ".png", "jpg", ".gif"]
+IMAGE_EXTS = [".ico", ".png", ".jpg", ".gif"]
 
 
 async def fetch_html(session: ClientSession, url: str) -> str:
@@ -52,7 +52,7 @@ def get_domain_links(links: List[str], domain_url: str) -> List[str]:
 
 def is_image_link(link: str) -> bool:
     """Return `True` if `link` is a link to an image."""
-    return link[-4:].lower() in IMAGE_EXTS
+    return strip_http_www(link)[-4:].lower() in IMAGE_EXTS
 
 
 def get_image_links(links: List[str]) -> List[str]:
