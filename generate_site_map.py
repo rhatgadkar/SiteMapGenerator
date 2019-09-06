@@ -139,6 +139,7 @@ async def build_site_map(
 
 
 async def main(domain: str, max_depth: int) -> None:
+    """Write the generated site map into file site_map.json."""
     site_map = await build_site_map(domain, max_depth)
     with open("site_map.json", "w") as f:
         json.dump(site_map, f, indent=4)
