@@ -10,6 +10,7 @@ HREF_RE = (
     r"(?P<url>https?\:\/\/(www\.)?(\S+\.)+[a-z]{2,}(\/[^\s\'\"]+)*\/?)\""
 )
 HREF_PROG = re.compile(HREF_RE)
+IMAGE_EXTS = [".ico", ".png", "jpg", ".gif"]
 
 
 async def fetch_html(session: ClientSession, url: str) -> str:
@@ -28,14 +29,12 @@ def get_all_links_from_html(html: str) -> List[str]:
 def strip_http_www(link: str) -> str:
     """Strip leading 'http' and 'www' from `link`.  Also strip trailing '/'."""
     link = link.strip("/")
-    if link.startswith("https://www."):
-        return link.lstrip("https://www.")
-    if link.startswith("http://www."):
-        return link.lstrip("http://www.")
     if link.startswith("https://"):
-        return link.lstrip("https://")
-    if link.startswith("http://"):
-        return link.lstrip("http://")
+        link = link.lstrip("https://")
+    elif link.startswith("http://"):
+        link = link.lstrip("http://")
+    if link.startswith("www."):
+        link = link.lstrip("www.")
     return link
 
 
@@ -53,12 +52,7 @@ def get_domain_links(links: List[str], domain_url: str) -> List[str]:
 
 def is_image_link(link: str) -> bool:
     """Return `True` if `link` is a link to an image."""
-    return (
-        link.endswith(".ico") or
-        link.endswith(".png") or
-        link.endswith(".jpg") or
-        link.endswith(".gif")
-    )
+    return link[-4:].lower() in IMAGE_EXTS
 
 
 def get_image_links(links: List[str]) -> List[str]:
