@@ -27,7 +27,7 @@ def get_all_links_from_html(html: str) -> List[str]:
 
 
 def strip_http_www(link: str) -> str:
-    """Strip leading 'http' and 'www' from `link`.  Also strip trailing '/'."""
+    """Strip leading "http" and "www" from `link`.  Also strip trailing "/"."""
     link = link.strip("/")
     if link.startswith("https://"):
         link = link.lstrip("https://")
@@ -158,7 +158,10 @@ if __name__ == "__main__":
             not domain.startswith("http://") and
             not domain.startswith("https://")
         ):
-            print("Domain URL must begin with either 'http://' or 'https://'.")
+            print(
+                "Domain URL must begin with either "
+                "\"http://\" or \"https://\"."
+            )
             domain = ""
     max_depth = -1
     while max_depth < 0:
